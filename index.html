@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>Ember — burner chat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -23,18 +23,19 @@
     --border:#3a342c;
   }
   *{box-sizing:border-box;}
+  html, body{ height:100%; margin:0; }
   body{
-    margin:0;
     background:var(--bg);
     color:var(--text);
     font-family:'Inter',system-ui,sans-serif;
-    height:100vh;
-    height:100dvh;
+    height:var(--app-height, 100vh);
     display:flex;
     align-items:stretch;
     justify-content:center;
     overflow:hidden;
     padding:0;
+    position:fixed;
+    inset:0;
   }
   .mono{font-family:'JetBrains Mono',monospace;}
   .app{
@@ -166,6 +167,25 @@
 <body>
 <div class="app" id="app"></div>
 
+<script>
+// ============================================================
+// Keeps the app sized to the REAL visible screen, so the message
+// box stays above the on-screen keyboard on mobile instead of
+// getting hidden underneath it.
+// ============================================================
+function setAppHeight(){
+  const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+  document.documentElement.style.setProperty('--app-height', h + 'px');
+  window.scrollTo(0, 0);
+}
+setAppHeight();
+window.addEventListener('resize', setAppHeight);
+window.addEventListener('orientationchange', setAppHeight);
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', setAppHeight);
+  window.visualViewport.addEventListener('scroll', setAppHeight);
+}
+</script>
 <script>
 // ============================================================
 // STEP 1 OF SETUP: paste your Firebase config below.
@@ -598,6 +618,9 @@ function renderChat(){
   el.querySelector('#saved-btn').onclick = () => { showSaved = true; renderSavedPanel(); };
   el.querySelector('#send-btn').onclick = () => sendText(el);
   el.querySelector('#text-input').addEventListener('keydown', (e) => { if(e.key === 'Enter') sendText(el); });
+  el.querySelector('#text-input').addEventListener('focus', () => {
+    setTimeout(() => { setAppHeight(); list.scrollTop = list.scrollHeight; }, 250);
+  });
   el.querySelector('#img-btn').onclick = () => el.querySelector('#img-input').click();
   el.querySelector('#img-input').addEventListener('change', handleImagePick);
 }
